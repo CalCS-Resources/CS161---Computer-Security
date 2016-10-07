@@ -124,6 +124,70 @@ inserted and sends to attacker
 \end{itemize}
 \end{itemize}
 
+\section{Applied Cryptography and Applied Craptography}
+\subsection{Applied Cryptography}
+\subsubsection{HMAC}
+\begin{itemize}
+\item It is both a cryptographic Hash and a MAC
+\item XOR the key with the $i_pad$ and zero extend the key so its one block wide if necessary
+$$Hash(key_1 \oplus i_pad || \textrm{message})$$
+$$Hash(key_2 \oplus o_pad || \textrm{first hash})$$
+\item The pads are slightly arbitrary (Hamming distance from each other far away) and the keys must be different
+\item The second hash prevents the attacker from just adding things onto the message to change the MAC
+\end{itemize}
+\subsubsection{Facebook Messenger Abuse Complaints}
+\begin{itemize}
+\item Facebook has an encrypted chat application on the phone now
+\item The crypto is good but not the point - used a library from Signal
+\item When Alice wants to send a message to Bob, queries FB for Bob's PK, encrypts m and send to FB who delivers it to Bob - out of order asynchronous delivery
+\item Both Alice and Bob are using encrypted and authenticated channels to FB
+\item Unique Messenger Problem: \textbf{Abuse}
+\begin{itemize}
+\item If either Alice or Bob is mean or something - want to be able to handle complaints
+\item Facebook can't necessarily trust Bob's complain about Alice - but the m is encrypted to FB can't just record them and read
+\item Abusers might also want to release information publicly - so only FB should be able to verify an abuse complaint
+\item Unless Bob forwards the unencrypted m to FB, FB must not know the contents - if Bob does FB must ensure this is the m that Alice sent to Bob - and nobody but FB should be able to verify
+\item Facebook has a nearly hidden option which allows Alice to see Bob's key - if they ever get together they can manually verify that FB was honest - the mantra of key servers: \textbf{Trust but Verify}. iMessage for example can't be verified like this to ensure Apple's honesty
+\item Alice ask's FB for Bob's PK (trusted key server). Alice creates a message that includes an abusive message and random value $k_rand$ encrypted with Bob's public key. He also includes and HMAC($k_rand$, m). Then FB only retains the HMAC of the m. Then Bob decrypts it. FB can not read the message or even verify Alice's HMAC, as the key for the HMAC is in the message itself. Only thing FB needs is its own HMAC key. Upon receipt, Bob checks that Alex's HMAC is correct and rejects if not. Then Bob complains with the unencrypted m and sends back to FB, who can verify with the m to validate the complaint about the m sent from Alice to Bob and wasn't tampered with. verify $mac=HMAC(k_rand, {M, k_rand})$ Bob couldn't prove to anyone other than FB because you need the FB key.
+\end{itemize}
+\end{itemize}
+\subsubsection{Generating Random Numbers}
+\begin{itemize}
+\item RNG is heart of crypto - this is done in all kinds of systems
+\item Greater entropy using a pseudo random number generator
+\item TRUE random number requires a physical process using oscillators and physics things - other common sources are human activity like mouse movements or network activity. More exotic: a wall of lava lamps with a rotating prism and a camera
+\item Combining Entropy: use various sources measured in how many bits (1 coin flip = 1 bit)
+\item \textbf{Pseudo RNG} (Deterministic Random Bit Generators): if one knows the internal state, then you can predict - otherwise indistinguishable from a random string. (1) Seed: set internal state based on some real entropy sources (2) Reseed: Update the internal state based on prev state and additional entroy (3) Generate: a series of random bits based on internal state
+\item It should be \textbf{rollback-resistant} - can't run the generator backwards (even though you know all going forwards)
+\item $HMAC_DRBG$: believed to be the best PRNG - to break means you can break HMAC: two internal state registers V and K that are the same size as Hash functions output. V is used as data input to HMAC and K is the key. \textbf{Generate}: requires one HMAC call per blocksize (bits of state) - 3 times. Backtrack resistant (would require you to reverse the hash function). Prediction resistant - you would have to be able to determine HMAC from a random function. \textbf{Update}: 4 HMACs to take input and create change reseed. Used standalone for instantiate - use all our entropy sources and combine them. Designed so that even if the attacker knows input and not k, can't predict k.
+\end{itemize}
+\subsection{Applied Craptography}
+\subsubsection{Snake Oil}
+\begin{itemize}
+\item \textbf{Snake oil} refers to fraudulent cures in the 19th century. 
+\item Anti snake oil: NSA's CNSA cryptographic suite: unclass algorithms that are secure: AES256, SHA384, 3072 keys to RSA/Diffie Hellman, ECDHE/ECDSA: 384 keys (all in bits)
+\item Actual snake oil: Amazingly long key lengths - be suspicious - NSA only uses 256b keys for symmetric and 4096b for RSA/DH
+\item Actual snake oil: New algorithms and crazy protocols, One Time Pads (have to actually never reuse), new math, "chaos," "cracking contest" - decrpyt this message with no context and no structure.
+\item 
+\end{itemize}
+\subsubsection{Unusable Systems}
+Unusability: No public keys (everyone must have the same shared key) - what if someone doesn't have the days keys, PGP (Pretty Good Privacy) if you steal a key and have old conversation, you can decrypt old messages. PGP - also hard to hide metadeta and never transparent. PGP - how do you find someone's PGP key. openssl libcrypto and libssl - a bunch of different functions
+\subsubsection{Low entropy RNGs}
+\begin{itemize}
+\item If you don't have enough - you can simply brute force and try every random number with 16 bits until you get it.
+\end{itemize}
+\subsubsection{Sabotaged RNGs}
+\begin{itemize}
+\item There were problems with an NSA random number generator. Were able to run $Dual_EC$ backwards and get the session key. Didn't even require a lot of computational power. The NSA had been using backdoors - someone rekeyed Junipers lock by changing P and Q - then someone ELSE added an ssh backdoor - then people noticed $the Dual_EC$ parameters were changes also
+\item Sabotaging "Magic Numbers": these numbers are always suspicious. Parameters of an elliptic curve, points P and Q, and prime p for Diffie Hellman, the contents of S-boxes in block ciphers, 
+\item Good systems should cleanly describe how their magic numbers things are generated - or use a pRNG with a specific seed (tell people it's seeded with this value) - this means people can trust it because if you couldn't someone would have to break the pRNG
+\item A good system should also be perceived as secure as well - otherwise people wouldn't use them. 
+\end{itemize}
 
+\section{Network Security}
+\begin{itemize}
+\item Hacks to attempts prevent deficiency, and using protocols to mae underneath layers irrelevant
+\item The OSI 7 Layer Network Stack: Physical and Data Link (Ethernet and Wifi, DHCP and ARP), Network Layer (IP, DNS), Transport Layer (TCP and UDP, TLS, Firewalls), Session Layer, Presentation Layer, Application Layer (Network intrusion detection, leads into web security), Political Layer
+\end{itemize}
 \end{document}
 
